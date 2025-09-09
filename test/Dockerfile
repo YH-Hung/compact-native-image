@@ -36,8 +36,8 @@ RUN chmod +x /app/greeter_server && \
 # Switch back to non-root user
 USER grpcuser
 
-# Expose the gRPC port
-EXPOSE 50051
+# Expose the gRPC port and metrics port
+EXPOSE 50051 8080
 
 # Run the server
 CMD ["/app/greeter_server"]

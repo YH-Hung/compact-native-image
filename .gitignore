@@ -1,0 +1,69 @@
+# macOS Files
+.DS_Store
+.AppleDouble
+.LSOverride
+._*
+
+# Thumbnails
+Thumbs.db
+
+# Build Directories
+build/
+cmake-build-*/
+CMakeFiles/
+CMakeCache.txt
+cmake_install.cmake
+Makefile
+
+# Generated Protocol Buffer Files
+*.pb.cc
+*.pb.h
+*.grpc.pb.cc
+*.grpc.pb.h
+
+# Compiled Object Files and Libraries
+*.o
+*.a
+*.so
+*.dylib
+*.dll
+
+# Executables
+greeter_server
+*.exe
+*.out
+
+# Docker Build Cache
+.dockerignore.bak
+
+# IDE and Editor Files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Temporary Files
+*.tmp
+*.temp
+*.bak
+
+# Log Files
+*.log
+
+# C++ Generated Files
+compile_commands.json
+CTestTestfile.cmake
+
+# Coverage Reports
+*.gcov
+*.gcda
+*.gcno
+coverage/
+
+# Package Manager Files (if any)
+conan.lock
+vcpkg_installed/
+
+# Test Results
+Testing/

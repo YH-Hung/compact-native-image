@@ -5,6 +5,7 @@ set(CMAKE_CXX_STANDARD 17)
 
 find_package(Protobuf REQUIRED)
 find_package(gRPC REQUIRED)
+find_package(prometheus-cpp REQUIRED)
 
 # Generate protobuf and gRPC files
 protobuf_generate_cpp(PROTO_SRCS PROTO_HDRS greeter.proto)
@@ -33,7 +34,9 @@ target_include_directories(greeter_server PRIVATE ${CMAKE_CURRENT_BINARY_DIR})
 target_link_libraries(greeter_server
   protobuf::libprotobuf
   gRPC::grpc++
+  prometheus-cpp::core
   /usr/local/lib/libutf8_range_lib.a
   /usr/local/lib/libutf8_validity.a
   /usr/local/lib/libabsl_utf8_for_code_point.a
+  pthread
 )

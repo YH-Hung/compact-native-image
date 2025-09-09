@@ -13,11 +13,14 @@ RUN apt-get update && apt-get install -y \
     cmake \
     git \
     curl \
+    libcurl4-openssl-dev \
+    zlib1g-dev \
     ca-certificates \
     && rm -rf /var/lib/apt/lists/*
 
-# Copy grpc source code
-COPY grpc /tmp/grpc
+# Copy grpc and prometheus-cpp source code
+COPY ../grpc /tmp/grpc
+COPY ../prometheus-cpp /tmp/prometheus-cpp
 
 # Build and install gRPC and protobuf from source with optimizations
 WORKDIR /tmp/grpc
@@ -38,6 +41,21 @@ RUN rm -rf cmake/build && mkdir -p cmake/build && cd cmake/build && \
     make install && \
     ldconfig
 
+# Build and install prometheus-cpp from source with optimizations
+WORKDIR /tmp/prometheus-cpp
+RUN rm -rf build && mkdir -p build && cd build && \
+    cmake -DENABLE_PULL=OFF \
+          -DENABLE_PUSH=OFF \
+          -DUSE_THIRDPARTY_LIBRARIES=OFF \
+          -DENABLE_TESTING=OFF \
+          -DBUILD_SHARED_LIBS=OFF \
+          -DCMAKE_BUILD_TYPE=Release \
+          -DCMAKE_INSTALL_PREFIX=/usr/local \
+          .. && \
+    make -j$(nproc) && \
+    make install && \
+    ldconfig
+
 # Final runtime stage - minimal image
 FROM ubuntu:22.04
 
@@ -47,6 +65,8 @@ ARG DEBIAN_FRONTEND=noninteractive
 # Install only runtime dependencies
 RUN apt-get update && apt-get install -y \
     ca-certificates \
+    libcurl4 \
+    zlib1g \
     && rm -rf /var/lib/apt/lists/* \
     && apt-get clean \
     && rm -rf /var/cache/apt/archives/*
