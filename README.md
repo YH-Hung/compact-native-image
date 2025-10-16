@@ -1,6 +1,6 @@
-# Compact gRPC Docker Images with Prometheus Metrics
+# Compact gRPC Docker Images with Prometheus Metrics, libcpr, and ICU
 
-A highly optimized Docker image setup for C++ gRPC servers with integrated Prometheus metrics and minimal size footprint. This project creates production-ready base images for gRPC applications with observability features using advanced size optimization techniques.
+A highly optimized Docker image setup for C++ gRPC servers with integrated Prometheus metrics, HTTP client (libcpr), Unicode support (ICU), and minimal size footprint. This project creates production-ready base images for gRPC applications with observability features using advanced size optimization techniques.
 
 ## 🚀 Quick Start
 
@@ -19,7 +19,7 @@ docker images | grep grpc
 
 | Image | Size | Description |
 |-------|------|-------------|
-| `grpc-base:latest` | **218MB** | Minimal gRPC + Prometheus runtime base |
+| `grpc-base:latest` | **218MB** | Minimal gRPC + Prometheus + cpr + ICU runtime base |
 | `grpc-test-server:latest` | **256MB** | Complete gRPC server with metrics export |
 
 ## 📁 Project Structure
@@ -27,7 +27,7 @@ docker images | grep grpc
 ```
 compact-native-image/
 ├── README.md              # This documentation
-├── Dockerfile             # Main gRPC + Prometheus base image
+├── Dockerfile             # Main gRPC + Prometheus + cpr + ICU base image
 ├── build.sh              # Build automation script
 ├── test.sh               # Testing and verification script
 ├── image_requirements.md  # Project requirements
@@ -43,20 +43,20 @@ compact-native-image/
 ### Prerequisites
 - Docker installed and running
 - At least 4GB free disk space
-- `grpc` and `prometheus-cpp` source directories in parent folder
+- Source directories in parent folder: `grpc`, `prometheus-cpp`, and `cpr`
 
 ### Building the Base Image
 
 ```bash
-# Build from parent directory (required for grpc source access)
+# Build from parent directory (required for source access)
 cd /path/to/LocalInstall
-docker build -f compact_image/Dockerfile -t grpc-base:latest .
+docker build -f compact-native-image/Dockerfile -t grpc-base:latest .
 ```
 
 ### Building the Test Server
 
 ```bash
-cd compact_image/test
+cd compact-native-image/test
 docker build -t grpc-test-server:latest .
 ```
 
@@ -133,7 +133,7 @@ CMD ["/app/my-server"]
 
 ## 🎯 Image Size Optimization Techniques
 
-Our **218MB** final image size (including Prometheus metrics) represents an **80%+ reduction** from typical gRPC images. Here's how we achieved this:
+Our **218MB** final image size (including Prometheus metrics, libcpr, and ICU) represents an **80%+ reduction** from typical gRPC images. Here's how we achieved this:
 
 ### 1. Multi-Stage Docker Builds
 
@@ -141,7 +141,7 @@ Our **218MB** final image size (including Prometheus metrics) represents an **80
 # Builder stage - contains build tools and dependencies
 FROM ubuntu:22.04 AS builder
 RUN apt-get install build-essential cmake git...
-# Build gRPC and prometheus-cpp from source
+# Build gRPC, prometheus-cpp, and cpr from source
 
 # Runtime stage - minimal dependencies only
 FROM ubuntu:22.04
@@ -172,6 +172,9 @@ COPY --from=builder /usr/local/lib /usr/local/lib
 # Install only essential runtime dependencies
 RUN apt-get update && apt-get install -y \
     ca-certificates \
+    libcurl4 \
+    zlib1g \
+    libicu70 \
     && rm -rf /var/lib/apt/lists/* \
     && apt-get clean \
     && rm -rf /var/cache/apt/archives/*
@@ -191,7 +194,7 @@ RUN apt-get update && apt-get install -y \
 ### 5. Minimal Base Image Strategy
 
 - **Base**: Ubuntu 22.04 (smaller than alternatives like CentOS)
-- **Runtime**: Only `ca-certificates` installed
+- **Runtime**: Minimal dependencies (ca-certificates, libcurl4, zlib1g, libicu70)
 - **User**: Non-root user for security without additional overhead
 
 ### 6. Static Linking Where Possible
@@ -218,15 +221,15 @@ target_link_libraries(greeter_server
 
 1. **Builder Stage**:
    - Ubuntu 22.04 + full development tools
-   - Compiles gRPC, protobuf, and prometheus-cpp from source
+   - Compiles gRPC, protobuf, prometheus-cpp, and cpr from source
    - Installs to `/usr/local`
    - ~1.5GB intermediate size
 
 2. **Runtime Stage**:
    - Fresh Ubuntu 22.04 base
    - Copies only compiled libraries and binaries
-   - Minimal runtime dependencies (ca-certificates, libcurl4, zlib1g)
-   - Final size: **218MB**
+   - Minimal runtime dependencies (ca-certificates, libcurl4, zlib1g, libicu70)
+   - Final size: **218MB** (may increase slightly with new libraries)
 
 ### Security Considerations
 
@@ -403,8 +406,10 @@ This project demonstrates Docker optimization techniques for educational and pro
 
 ## ✨ Key Features
 
-- **🚀 Compact Size**: 218MB total (base + metrics libraries)
+- **🚀 Compact Size**: 218MB total (base + metrics + HTTP client + ICU libraries)
 - **📊 Prometheus Integration**: Built-in metrics collection and export
+- **🌐 HTTP Client**: libcpr for modern C++ HTTP requests
+- **🌍 Unicode Support**: ICU library for internationalization
 - **🔒 Security**: Non-root user execution
 - **⚡ Performance**: Optimized builds with release configuration
 - **🐳 Production Ready**: Multi-stage builds for minimal attack surface
@@ -413,9 +418,10 @@ This project demonstrates Docker optimization techniques for educational and pro
 
 ---
 
-**Achievement**: 🎯 **218MB** gRPC + Prometheus-ready image with full C++ development and observability capability - an **84%+ size reduction** from standard approaches while maintaining full functionality, security, and comprehensive metrics.
+**Achievement**: 🎯 **218MB** gRPC + Prometheus + libcpr + ICU image with full C++ development, HTTP client, Unicode support, and observability capability - an **84%+ size reduction** from standard approaches while maintaining full functionality, security, and comprehensive metrics.
 
-## Todos
+## Latest Updates
 
-- cpr
-- opentelemetry
+### Added Libraries (2025-10-16)
+- **libcpr**: C++ HTTP request library built from source with static linking
+- **ICU (International Components for Unicode)**: Unicode and globalization support via libicu70

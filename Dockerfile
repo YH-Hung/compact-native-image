@@ -16,13 +16,15 @@ RUN apt-get update && apt-get install -y \
     libcurl4-openssl-dev \
     zlib1g-dev \
     ca-certificates \
+    libicu-dev \
     && rm -rf /var/lib/apt/lists/*
 
-# Copy grpc and prometheus-cpp source code
+# Copy grpc, prometheus-cpp, and cpr source code
 COPY ../grpc /tmp/grpc
 COPY ../prometheus-cpp /tmp/prometheus-cpp
+COPY ../cpr /tmp/cpr
 
-# Build and install gRPC and protobuf from source with optimizations
+# Build and install gRPC, protobuf from source with optimizations
 WORKDIR /tmp/grpc
 RUN rm -rf cmake/build && mkdir -p cmake/build && cd cmake/build && \
     cmake -DgRPC_INSTALL=ON \
@@ -56,6 +58,20 @@ RUN rm -rf build && mkdir -p build && cd build && \
     make install && \
     ldconfig
 
+# Build and install cpr from source with optimizations
+WORKDIR /tmp/cpr
+RUN rm -rf build && mkdir -p build && cd build && \
+    cmake -DCPR_BUILD_TESTS=OFF \
+          -DCPR_BUILD_TESTS_SSL=OFF \
+          -DCPR_FORCE_USE_SYSTEM_CURL=ON \
+          -DBUILD_SHARED_LIBS=OFF \
+          -DCMAKE_BUILD_TYPE=Release \
+          -DCMAKE_INSTALL_PREFIX=/usr/local \
+          .. && \
+    make -j$(nproc) && \
+    make install && \
+    ldconfig
+
 # Final runtime stage - minimal image
 FROM ubuntu:22.04
 
@@ -67,11 +83,12 @@ RUN apt-get update && apt-get install -y \
     ca-certificates \
     libcurl4 \
     zlib1g \
+    libicu70 \
     && rm -rf /var/lib/apt/lists/* \
     && apt-get clean \
     && rm -rf /var/cache/apt/archives/*
 
-# Copy installed gRPC and protobuf libraries from builder stage
+# Copy installed libraries (gRPC, protobuf, prometheus-cpp, cpr) from builder stage
 COPY --from=builder /usr/local/lib /usr/local/lib
 COPY --from=builder /usr/local/bin /usr/local/bin
 COPY --from=builder /usr/local/include /usr/local/include
